@@ -7,9 +7,8 @@ from shutil import rmtree
 from unittest import TestCase
 from unittest.mock import patch
 
-from targpg import Targpg
-from targpg.targpg import logger as gt_logger
-gt_logger.setLevel("CRITICAL")
+from targpg import Targpg, tglog
+tglog.setLevel("CRITICAL")
 
 class TargpgTests(TestCase):
     """Test functionality of BatchRenamer"""
