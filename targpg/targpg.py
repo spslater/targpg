@@ -1,5 +1,5 @@
 """Secure a compressed tarfile with gpg password"""
-__all__ = ["Targpg"]
+__all__ = ["Targpg", "tglog"]
 
 import gzip
 import logging
@@ -15,7 +15,7 @@ from .meta import __author__, __version__
 
 PROG_NAME = Path(__file__).stem
 
-logger = logging.getLogger(PROG_NAME)
+tglog = logging.getLogger(PROG_NAME)
 
 Pathname = Union[str, Path]
 
@@ -171,7 +171,7 @@ class Targpg:
         dirname = Path(directory)
         for filename in filenames:
             addfile = self._path(filename, dirname)
-            logger.debug("adding; %s", addfile)
+            tglog.debug("adding; %s", addfile)
             self.tar.add(addfile)
 
         return self
@@ -199,7 +199,7 @@ class Targpg:
         filenames = [self._path(filename, dirname) for filename in filenames]
         for member in self.tar.getmembers():
             if member.name in filenames:
-                logger.debug("updating; %s", member.name)
+                tglog.debug("updating; %s", member.name)
                 filenames.remove(member.name)
                 newtar.add(member.name)
             else:
@@ -207,7 +207,7 @@ class Targpg:
 
         if filenames:
             for filename in filenames:
-                logger.debug("adding; %s", filename)
+                tglog.debug("adding; %s", filename)
                 newtar.add(filename)
 
         self.raw.close()
@@ -234,7 +234,7 @@ class Targpg:
         if not filenames:
             pad = len(str(len(names)))
             for idx, name in enumerate(names):
-                logger.info("%s %s", str(idx).rjust(pad), name)
+                tglog.info("%s %s", str(idx).rjust(pad), name)
             res = input("Extract? ")
             idxs = [int(r) for r in res.split()]
             filenames = [names[i] for i in idxs]
@@ -242,13 +242,13 @@ class Targpg:
             oknames = []
             for filename in filenames:
                 if filename not in names:
-                    logger.debug("name not in opts; %s", filename)
+                    tglog.debug("name not in opts; %s", filename)
                 else:
                     oknames.append(filename)
             filenames = oknames
         self._readmode()
         for filename in filenames:
-            logger.debug("extracting; %s", filename)
+            tglog.debug("extracting; %s", filename)
             self.tar.extract(filename, path=outdir)
 
         return self

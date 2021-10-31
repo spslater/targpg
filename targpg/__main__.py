@@ -1,8 +1,7 @@
 """Run Targpg from the command line"""
 import sys
 
-from .targpg import Targpg, logger
-from .parser import targpg_parser
+from targpg import Targpg, tglog, targpg_parser
 
 
 def main():
@@ -17,7 +16,7 @@ def main():
             autocreate=args.autocreate,
         )
     except KeyboardInterrupt:
-        logger.info("\nExiting program, cya later")
+        tglog.info("\nExiting program, cya later")
         sys.exit(1)
 
     try:
@@ -33,10 +32,10 @@ def main():
         if args.extr is not None:
             tar.extract(*args.extr, outdir=args.output)
     except (KeyboardInterrupt, FileNotFoundError):
-        logger.info("\nExiting program, cya later")
+        tglog.info("\nExiting program, cya later")
     # pylint: disable=broad-except
     except Exception as e:
-        logger.error("error; %s", e)
+        tglog.error("error; %s", e)
     else:
         if args.add:
             tar.save()
