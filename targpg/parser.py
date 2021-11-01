@@ -43,6 +43,22 @@ def targpg_parser() -> ArgumentParser:
         version=f"%(prog)s {__version__}",
     )
     parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="count",
+        default=0,
+        help="more verbose output",
+    )
+    parser.add_argument(
+        "-q",
+        "--quite",
+        dest="quite",
+        action="store_true",
+        default=False,
+        help="supress output",
+    )
+    parser.add_argument(
         "--add",
         "-a",
         action=ComboListAction,
@@ -108,7 +124,6 @@ def targpg_parser() -> ArgumentParser:
         "--directory",
         "-d",
         dest="directory",
-        default=".",
         help="when adding files, do it relative to this directory",
     )
     return parser

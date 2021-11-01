@@ -3,6 +3,7 @@ __all__ = ["Targpg", "tglog"]
 
 import gzip
 import logging
+import sys
 import tarfile
 from getpass import getpass
 from io import BytesIO
@@ -16,8 +17,14 @@ from .meta import __author__, __version__
 PROG_NAME = Path(__file__).stem
 
 tglog = logging.getLogger(PROG_NAME)
+tglog.setLevel(logging.INFO)
+handle = logging.StreamHandler(sys.stdout)
+handle.setFormatter(logging.Formatter("> %(message)s"))
+tglog.addHandler(handle)
 
 Pathname = Union[str, Path]
+
+Path.__eq__ = lambda self, b: str(self) == str(b)
 
 
 class Targpg:
@@ -115,20 +122,28 @@ class Targpg:
     def _path(filepath: Pathname, directory: Pathname) -> str:
         if not isinstance(filepath, Path):
             filepath = Path(filepath)
-        if filepath.is_absolute():
-            return str(filepath)
+        tglog.debug("dir: %s", directory)
+        if not directory and filepath.is_absolute():
+            tglog.debug("file is abs; %s", filepath)
+            return str(filepath), str(filepath)
+
+        if not directory:
+            directory = "."
 
         if not isinstance(directory, Path):
             directory = Path(directory)
         directory = directory.resolve()
+        tglog.debug("working dir; %s", directory)
 
         abspath = directory.joinpath(filepath).resolve()
-        return str(abspath.relative_to(directory))
+        tglog.debug("abs path; %s", abspath)
+        tglog.debug("rel path; %s", abspath.relative_to(directory))
+        return str(abspath), str(abspath.relative_to(directory))
 
     def add(
         self,
         *filenames: Pathname,
-        directory: Pathname = ".",
+        directory: Optional[Pathname] = None,
         unique: bool = False,
         update: bool = False,
     ) -> "Targpg":
@@ -137,8 +152,8 @@ class Targpg:
         :param *filenames: Pathnames to add to the archive
         :type *filenames: Pathname
         :param directory: archive filepath is relative to this directory,
-            defaults to "."
-        :type directory: Pathname, optional
+            defaults to None
+        :type directory: Optional[Pathname], optional
         :param unique: only allow unique files to be added, defaults to False
         :type unique: bool, optional
         :param update: update a file if it exists otherwise add a duplicate,
@@ -165,29 +180,29 @@ class Targpg:
         filenames = list(filenames)
         if update:
             upfiles = [f for f in filenames if str(f) in tarfiles]
+            tglog.debug("update; %s", upfiles)
             self.update(*upfiles, directory=directory)
             filenames = [f for f in filenames if f not in upfiles]
 
-        dirname = Path(directory)
         for filename in filenames:
-            addfile = self._path(filename, dirname)
+            fullfile, addfile = self._path(filename, directory)
             tglog.debug("adding; %s", addfile)
-            self.tar.add(addfile)
+            self.tar.add(fullfile, arcname=addfile)
 
         return self
 
     def update(
         self,
         *filenames: Pathname,
-        directory: Pathname = ".",
+        directory: Optional[Pathname] = None,
     ) -> "Targpg":
         """Update an existing file in the archvie
 
         :param *filenames: Pathnames to update in the archive
         :type *filenames: Pathname
         :param directory: archive filepath is relative to this directory,
-            defaults to "."
-        :type directory: Pathname, optional
+            defaults to None
+        :type directory: Optional[Pathname], optional
         :return: self to allow chaining
         :rtype: Targpg
         """
@@ -195,8 +210,7 @@ class Targpg:
         # pylint: disable=consider-using-with
         newtar = tarfile.TarFile(fileobj=temp, mode="w")
         self._readmode()
-        dirname = Path(directory)
-        filenames = [self._path(filename, dirname) for filename in filenames]
+        filenames = list(filenames)
         for member in self.tar.getmembers():
             if member.name in filenames:
                 tglog.debug("updating; %s", member.name)
@@ -205,10 +219,10 @@ class Targpg:
             else:
                 newtar.addfile(member, self.tar.extractfile(member))
 
-        if filenames:
-            for filename in filenames:
-                tglog.debug("adding; %s", filename)
-                newtar.add(filename)
+        filenames = [self._path(filename, directory) for filename in filenames]
+        for filepath, arcname in filenames:
+            tglog.debug("adding; %s", arcname)
+            newtar.add(filepath, arcname=arcname)
 
         self.raw.close()
         self.raw = temp
