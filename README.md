@@ -1,6 +1,10 @@
 # Tar GnuPG
 Manage a secure archive containing sensative docs.
 
+![Run Tests](https://github.com/spslater/targpg/actions/workflows/tests.yml/badge.svg)
+![Build Standalone Apps](https://github.com/spslater/targpg/actions/workflows/execs.yml/badge.svg)
+![Publish to Repositories](https://github.com/spslater/targpg/actions/workflows/repos.yml/badge.svg)
+
 You might be thinking, "Hey there's already a
 [gpgtar](https://www.gnupg.org/documentation/manuals/gnupg/gpgtar.html)
 which seems to do exactly this, why don't I use that?", and you could be right,
