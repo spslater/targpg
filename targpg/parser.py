@@ -58,72 +58,77 @@ def targpg_parser() -> ArgumentParser:
         default=False,
         help="supress output",
     )
+
     parser.add_argument(
-        "--add",
-        "-a",
-        action=ComboListAction,
-        dest="add",
-        nargs="*",
-        help="add files to the archive",
-    )
-    parser.add_argument(
-        "--create",
         "-c",
+        "--create",
         action="store_true",
         dest="autocreate",
         default=False,
         help="create the file without confirmation if it does not exist",
     )
     parser.add_argument(
-        "--extract",
-        "-e",
-        action=ComboListAction,
-        dest="extr",
-        nargs="*",
-        help="extract the files from the archive, if no files given a prompt will ask",
-    )
-    parser.add_argument(
-        "--passfile",
         "-p",
+        "--passfile",
         dest="passfile",
         help="file with archive password stored in it",
     )
+
     parser.add_argument(
-        "--list",
-        "-l",
-        action="store_true",
-        dest="list",
-        default=False,
-        help="list the contents of the archive",
+        "-a",
+        "--add",
+        action=ComboListAction,
+        dest="add",
+        nargs="*",
+        help="add files to the archive",
     )
     parser.add_argument(
-        "--unique",
         "-x",
+        "--unique",
         action="store_true",
         dest="unique",
         default=False,
         help="only add unique files, if the file exists an error is thrown",
     )
     parser.add_argument(
-        "--update",
         "-u",
+        "--update",
         action="store_true",
         dest="update",
         default=False,
         help="overwrite existing files if any being passed in match",
     )
     parser.add_argument(
-        "--output",
+        "-d",
+        "--directory",
+        dest="directory",
+        help="when adding files, do it relative to this directory",
+        metavar="DIR",
+    )
+
+    parser.add_argument(
+        "-e",
+        "--extract",
+        action=ComboListAction,
+        dest="extr",
+        nargs="*",
+        help="extract the files from the archive, if no files given a prompt will ask",
+    )
+    parser.add_argument(
         "-o",
+        "--output",
         action="store_true",
         dest="output",
         default=".",
         help="directory to extract files to",
     )
+
     parser.add_argument(
-        "--directory",
-        "-d",
-        dest="directory",
-        help="when adding files, do it relative to this directory",
+        "-l",
+        "--list",
+        action="store_true",
+        dest="list",
+        default=False,
+        help="list the contents of the archive",
     )
     return parser
