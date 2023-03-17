@@ -13,8 +13,8 @@ them the same name by coincidence).
 
 ## Usage
 ```
-usage: targpg [-h] [-V] [-v] [-q] [-c] [-p PASSFILE] [-a [ADD ...]] [-x] [-u] [-d DIR]
-              [-e [EXTR ...]] [-o] [-l] archive
+usage: targpg [-h] [-V] [-v] [-q] [-c] [-p PASSFILE] [-o] [-d DIR] [-a [ADD ...]] [-u [UPDATE ...]] [-r [REMOVE ...]] [-e [EXTR ...]] [-l]
+              archive
 
 manage secure archive containing sensative docs
 
@@ -29,15 +29,17 @@ optional arguments:
   -c, --create          create the file without confirmation if it does not exist
   -p PASSFILE, --passfile PASSFILE
                         file with archive password stored in it
-  -a [ADD ...], --add [ADD ...]
-                        add files to the archive
-  -x, --unique          only add unique files, if the file exists an error is thrown
-  -u, --update          overwrite existing files if any being passed in match
+  -o, --output          directory to extract files to
   -d DIR, --directory DIR
                         when adding files, do it relative to this directory
+  -a [ADD ...], --add [ADD ...]
+                        add files to the archive
+  -u [UPDATE ...], --update [UPDATE ...]
+                        overwrite existing files if any being passed in match
+  -r [REMOVE ...], --remove [REMOVE ...]
+                        add files to the archive
   -e [EXTR ...], --extract [EXTR ...]
                         extract the files from the archive, if no files given a prompt will ask
-  -o, --output          directory to extract files to
   -l, --list            list the contents of the archive
 ```
 
@@ -48,9 +50,17 @@ Auto create the archive if it does not already exist.
 Load the password of the archive from a file instead of stdin.
 
 ### add
-Add new files to the archive. If the `--unique` flag is used, then existing
-files will cause an error. The `--update` flag will replace existing files
-with ones passed in. `--directory` sets the working directory so files are
+Add new files to the archive. `--directory` sets the working directory so files are
+added relative to that directory.
+
+### update
+Update existing files in the archive. If they don't exist then an error will
+be raised. `--directory` sets the working directory so files are
+added relative to that directory.
+
+### remove
+Remove existing files in the archive. If they don't exist then an error will
+be raised. `--directory` sets the working directory so files are
 added relative to that directory.
 
 ### extract

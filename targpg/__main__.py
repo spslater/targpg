@@ -40,8 +40,16 @@ def main():
             tar.add(
                 *args.add,
                 directory=args.directory,
-                unique=args.unique,
-                update=args.update,
+            )
+        if args.update:
+            tar.update(
+                *args.update,
+                directory=args.directory,
+            )
+        if args.remove:
+            tar.remove(
+                *args.remove,
+                directory=args.directory,
             )
 
         if args.extr is not None:
@@ -58,7 +66,7 @@ def main():
             tglog.error(format_exc())
         tglog.error("unknown error; %s", e)
     else:
-        if args.add:
+        if args.add or args.remove or args.update:
             tar.save()
     finally:
         tar.exit()

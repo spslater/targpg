@@ -73,7 +73,22 @@ def targpg_parser() -> ArgumentParser:
         dest="passfile",
         help="file with archive password stored in it",
     )
+    parser.add_argument(
+        "-o",
+        "--output",
+        action="store_true",
+        dest="output",
+        default=".",
+        help="directory to extract files to",
+    )
 
+    parser.add_argument(
+        "-d",
+        "--directory",
+        dest="directory",
+        help="when adding files, do it relative to this directory",
+        metavar="DIR",
+    )
     parser.add_argument(
         "-a",
         "--add",
@@ -83,27 +98,20 @@ def targpg_parser() -> ArgumentParser:
         help="add files to the archive",
     )
     parser.add_argument(
-        "-x",
-        "--unique",
-        action="store_true",
-        dest="unique",
-        default=False,
-        help="only add unique files, if the file exists an error is thrown",
-    )
-    parser.add_argument(
         "-u",
         "--update",
-        action="store_true",
+        action=ComboListAction,
         dest="update",
-        default=False,
+        nargs="*",
         help="overwrite existing files if any being passed in match",
     )
     parser.add_argument(
-        "-d",
-        "--directory",
-        dest="directory",
-        help="when adding files, do it relative to this directory",
-        metavar="DIR",
+        "-r",
+        "--remove",
+        action=ComboListAction,
+        dest="remove",
+        nargs="*",
+        help="add files to the archive",
     )
 
     parser.add_argument(
@@ -113,14 +121,6 @@ def targpg_parser() -> ArgumentParser:
         dest="extr",
         nargs="*",
         help="extract the files from the archive, if no files given a prompt will ask",
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        action="store_true",
-        dest="output",
-        default=".",
-        help="directory to extract files to",
     )
 
     parser.add_argument(

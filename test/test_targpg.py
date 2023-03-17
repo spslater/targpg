@@ -67,6 +67,12 @@ class TargpgTests(TestCase):
         except FileNotFoundError:
             pass
 
+    def _create(self):
+        gt = Targpg(self.archive, passfile=self.passfile, autocreate=True)
+        gt.add(self.file1, self.file2)
+        gt.save()
+        return gt
+
     def test_01_init(self):
         """Initalizing with different attributes"""
         with self.assertRaises(FileNotFoundError), patch(
@@ -102,11 +108,9 @@ class TargpgTests(TestCase):
 
     def test_02_add(self):
         """Add files to the archive"""
-        gt = Targpg(self.archive, passfile=self.passfile, autocreate=True)
-        gt.add(self.file1, self.file2)
+        gt = self._create()
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             gt.list()
-        gt.save()
         self.assertFileExists(
             self.archive,
             "File should be saved when files are added",
@@ -118,35 +122,52 @@ class TargpgTests(TestCase):
             "Files in archive should appear when listed",
         )
 
+    def test_03_dupe(self):
+        """Add dupe file to the archive fails"""
+        gt = self._create()
         with self.assertRaises(
             ValueError,
-            msg="Should not be able to add the same file when unique = `True`",
+            msg="Should not be able to add the same file",
         ):
-            gt.add(self.file1, unique=True)
+            gt.add(self.file1)
 
+    def test_04_dupe(self):
+        """Add dupe file to the archive fails"""
+        gt = self._create()
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             gt.list()
         num_files = len(mock_stdout.getvalue().splitlines())
-        gt.add(self.file1, update=True)
+
+        gt.update(self.file1)
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             gt.list()
         num_files_update = len(mock_stdout.getvalue().splitlines())
-        gt.add(self.file1)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            gt.list()
-        num_files_append = len(mock_stdout.getvalue().splitlines())
+
         self.assertEqual(
             num_files,
             num_files_update,
-            "Update should replace the file not append to the archive",
-        )
-        self.assertNotEqual(
-            num_files_update,
-            num_files_append,
-            "Dupes should be appened when no arguments are given",
+            "Update should replace the file in the archive",
         )
 
-    def test_03_extract(self):
+    def test_05_remove(self):
+        """Remove file from the archive"""
+        gt = self._create()
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            gt.list()
+        num_files = len(mock_stdout.getvalue().splitlines())
+
+        gt.remove(self.file1)
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            gt.list()
+        num_files_remove = len(mock_stdout.getvalue().splitlines())
+
+        self.assertNotEqual(
+            num_files,
+            num_files_remove,
+            "File should be removed from the archive",
+        )
+
+    def test_06_extract(self):
         """Extract files from the archive"""
         gt = Targpg(self.archive, passfile=self.passfile, autocreate=True)
         gt.add(self.file1, self.file2)

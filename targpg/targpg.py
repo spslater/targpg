@@ -140,12 +140,29 @@ class Targpg:
         tglog.debug("rel path; %s", abspath.relative_to(directory))
         return str(abspath), str(abspath.relative_to(directory))
 
+    @staticmethod
+    def _clean_name(filepath: Pathname) -> str:
+        f = str(filepath)
+        return f if f[-1] != "/" else f[:-1]
+
+    def _unchanged(
+        self,
+        newtar: tarfile.TarFile,
+        filenames: Pathname,
+    ) -> tarfile.TarFile:
+        for member in self.tar.getmembers():
+            for filename in [str(f) for f in filenames]:
+                if filename[-1] == "/":
+                    filename = filename[:-1]
+                fnasdir = filename + "/"
+                if member.name != filename and not member.name.startswith(fnasdir):
+                    newtar.addfile(member, self.tar.extractfile(member))
+        return newtar
+
     def add(
         self,
         *filenames: Pathname,
         directory: Optional[Pathname] = None,
-        unique: bool = False,
-        update: bool = False,
     ) -> "Targpg":
         """Add new files to the archive
 
@@ -154,13 +171,7 @@ class Targpg:
         :param directory: archive filepath is relative to this directory,
             defaults to None
         :type directory: Optional[Pathname], optional
-        :param unique: only allow unique files to be added, defaults to False
-        :type unique: bool, optional
-        :param update: update a file if it exists otherwise add a duplicate,
-            defaults to False
-        :type update: bool, optional
-        :raises ValueError: a duplicate file is being added when uniqueness is
-            being enforced
+        :raises ValueError: a duplicate file is being added
         :return: self to allow chaining
         :rtype: Targpg
         """
@@ -169,20 +180,10 @@ class Targpg:
 
         self._writemode()
 
-        if unique or update:
-            tarfiles = self.tar.getnames()
-
-        if unique:
-            dupes = [f for f in filenames if str(f) in tarfiles]
-            if dupes:
-                raise ValueError(f"File(s) already exists in archive; {dupes}")
-
-        filenames = list(filenames)
-        if update:
-            upfiles = [f for f in filenames if str(f) in tarfiles]
-            tglog.debug("update; %s", upfiles)
-            self.update(*upfiles, directory=directory)
-            filenames = [f for f in filenames if f not in upfiles]
+        tarfiles = self.tar.getnames()
+        dupes = [f for f in filenames if self._clean_name(f) in tarfiles]
+        if dupes:
+            raise ValueError(f"File(s) already exists in archive; {dupes}")
 
         for filename in filenames:
             fullfile, addfile = self._path(filename, directory)
@@ -203,26 +204,59 @@ class Targpg:
         :param directory: archive filepath is relative to this directory,
             defaults to None
         :type directory: Optional[Pathname], optional
+        :raises ValueError: a nonexistant file is being updated
         :return: self to allow chaining
         :rtype: Targpg
         """
+
+        tarfiles = self.tar.getnames()
+        unique = [f for f in filenames if self._clean_name(f) not in tarfiles]
+        if unique:
+            raise ValueError(f"File(s) do not exists in archive; {unique}")
+
         temp = BytesIO()
         # pylint: disable=consider-using-with
         newtar = tarfile.TarFile(fileobj=temp, mode="w")
         self._readmode()
-        filenames = list(filenames)
-        for member in self.tar.getmembers():
-            if member.name in filenames:
-                tglog.debug("updating; %s", member.name)
-                filenames.remove(member.name)
-                newtar.add(member.name)
-            else:
-                newtar.addfile(member, self.tar.extractfile(member))
+        newtar = self._unchanged(newtar, filenames)
 
         filenames = [self._path(filename, directory) for filename in filenames]
         for filepath, arcname in filenames:
             tglog.debug("adding; %s", arcname)
             newtar.add(filepath, arcname=arcname)
+
+        self.raw.close()
+        self.raw = temp
+        self.tar = newtar
+
+        return self
+
+    def remove(
+        self,
+        *filenames: Pathname,
+        directory: Optional[Pathname] = None,
+    ) -> "Targpg":
+        """Remove an existing file from the archvie
+
+        :param *filenames: Pathnames to remove from the archive
+        :type *filenames: Pathname
+        :param directory: archive filepath is relative to this directory,
+            defaults to None
+        :type directory: Optional[Pathname], optional
+        :return: self to allow chaining
+        :rtype: Targpg
+        """
+
+        tarfiles = self.tar.getnames()
+        notin = [f for f in filenames if self._clean_name(f) not in tarfiles]
+        if notin:
+            raise ValueError(f"File(s) do not exists in archive; {notin}")
+
+        temp = BytesIO()
+        # pylint: disable=consider-using-with
+        newtar = tarfile.TarFile(fileobj=temp, mode="w")
+        self._readmode()
+        newtar = self._unchanged(newtar, filenames)
 
         self.raw.close()
         self.raw = temp
