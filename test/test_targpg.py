@@ -1,11 +1,10 @@
 """Testing targpg"""
-import getpass
 from io import StringIO
 from os import makedirs
 from pathlib import Path
 from shutil import rmtree
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from targpg import Targpg, tglog
 
@@ -43,10 +42,11 @@ class TargpgTests(TestCase):
         cls.archive = Path(cls.work, "secure.tgz.gpg")
 
         cls.passfile = Path(cls.work, "passfile")
-        cls.password = "password"
-        cls.passfile.write_text(cls.password, encoding="utf-8")
+        cls.passfile.write_text("password", encoding="utf-8")
         cls.wrongpass = Path(cls.work, "wrongpass")
         cls.wrongpass.touch()
+        cls.newpass = Path(cls.work, "newpass")
+        cls.newpass.write_text("newword", encoding="utf-8")
 
         cls.file1 = Path(cls.work, "file1.txt")
         cls.file1_data = "hello"
@@ -177,9 +177,37 @@ class TargpgTests(TestCase):
             "File should be extracted when passed as an argument",
         )
 
-        with patch("builtins.input", return_value="1") as mock_input:
+        with patch("builtins.input", return_value="1"):
             gt.extract(outdir=self.extr)
         self.assertFileExists(
             Path(self.extr, self.file2),
             "File should be extracted when selected from the command line",
         )
+
+    def test_07_newpass_auto_file(self):
+        """Change the password of the archive"""
+        gt = Targpg(self.archive, passfile=self.passfile, autocreate=True)
+        gt.newpass(self.newpass)
+        gt.save().exit()
+
+        with self.assertRaises(
+            PermissionError,
+            msg="Should not open file with old password",
+        ):
+            Targpg(self.archive, passfile=self.passfile)
+
+    def test_08_newpass_ask_file(self):
+        """Change the password of the archive"""
+        gt = Targpg(self.archive, passfile=self.passfile, autocreate=True)
+
+        input_mocks = Mock()
+        input_mocks.side_effect = ["y", self.newpass]
+        with patch("builtins.input", input_mocks):
+            gt.newpass()
+        gt.save().exit()
+
+        with self.assertRaises(
+            PermissionError,
+            msg="Should not open file with old password",
+        ):
+            Targpg(self.archive, passfile=self.passfile)

@@ -17,7 +17,8 @@ them the same name by coincidence).
 
 ## Usage
 ```
-usage: targpg [-h] [-V] [-v] [-q] [-c] [-p PASSFILE] [-o] [-d DIR] [-a [ADD ...]] [-u [UPDATE ...]] [-r [REMOVE ...]] [-e [EXTR ...]] [-l]
+usage: targpg [-h] [-V] [-v] [-q] [-c] [-p PASSFILE] [-o] [-n] [-f NEWFILE] [-d DIR] [-a [ADD ...]] [-u [UPDATE ...]] [-r [REMOVE ...]]
+              [-e [EXTR ...]] [-l]
               archive
 
 manage secure archive containing sensative docs
@@ -34,6 +35,9 @@ optional arguments:
   -p PASSFILE, --passfile PASSFILE
                         file with archive password stored in it
   -o, --output          directory to extract files to
+  -n, --newpass         change the password of the archive
+  -f NEWFILE, --filename NEWFILE
+                        file new password is stored in
   -d DIR, --directory DIR
                         when adding files, do it relative to this directory
   -a [ADD ...], --add [ADD ...]
@@ -46,6 +50,11 @@ optional arguments:
                         extract the files from the archive, if no files given a prompt will ask
   -l, --list            list the contents of the archive
 ```
+
+### newpass
+Change the password of the archive, can be loaded from a file either from the
+`--filename` flag or user prompt. If no file is given, user is asked to type
+password.
 
 ### create
 Auto create the archive if it does not already exist.

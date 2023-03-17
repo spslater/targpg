@@ -24,6 +24,9 @@ def main():
             passfile=args.passfile,
             autocreate=args.autocreate,
         )
+    except PermissionError:
+        tglog.info("\nPasswords do not match, bye")
+        sys.exit(1)
     except FileNotFoundError:
         tglog.info("\nNo secure file to load, cya later")
         sys.exit(1)
@@ -36,6 +39,9 @@ def main():
         sys.exit(1)
 
     try:
+        if args.newpass:
+            tar.newpass(args.newfile)
+
         if args.add:
             tar.add(
                 *args.add,
@@ -66,7 +72,7 @@ def main():
             tglog.error(format_exc())
         tglog.error("unknown error; %s", e)
     else:
-        if args.add or args.remove or args.update:
+        if args.add or args.remove or args.update or args.newpass:
             tar.save()
     finally:
         tar.exit()
