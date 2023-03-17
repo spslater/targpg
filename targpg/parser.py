@@ -82,6 +82,22 @@ def targpg_parser() -> ArgumentParser:
         help="directory to extract files to",
     )
 
+
+    parser.add_argument(
+        "-n",
+        "--newpass",
+        action="store_true",
+        dest="newpass",
+        default=False,
+        help="change the password of the archive",
+    )
+    parser.add_argument(
+        "-f",
+        "--filename",
+        dest="newfile",
+        help="file new password is stored in",
+    )
+
     parser.add_argument(
         "-d",
         "--directory",

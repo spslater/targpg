@@ -67,12 +67,19 @@ class Targpg:
         except tarfile.ReadError:
             pass
 
+    def _manual_pass(self):
+        newpass = getpass("New Password: ")
+        confirm = getpass("Confirm Password: ")
+        if newpass != confirm:
+            raise PermissionError("Passwords do not match!")
+        return newpass
+
     def _load_pass(self, passfile: Pathname) -> Optional[str]:
         if passfile:
             with open(passfile, "r", encoding="utf-8") as fp:
                 return fp.read()
         if not self.exists:
-            return getpass("New Password: ")
+            return self._manual_pass()
         return getpass()
 
     def _readmode(self):
@@ -304,6 +311,18 @@ class Targpg:
     def list(self):
         """List contents of the archvie to stdout"""
         self.tar.list()
+
+    def newpass(self, loadfile: Pathname = None) -> "Targpg":
+        if loadfile is not None:
+            self.password = self._load_pass(loadfile)
+            return self
+        fromfile = input("Load from file? ").lower()
+        if len(fromfile) and fromfile[0] == "y":
+            filename = input("Filename: ")
+            self.password = self._load_pass(filename)
+        else:
+            self.password = self._manual_pass()
+        return self
 
     def save(self, filename: Pathname = None) -> "Targpg":
         """Save the archive to file
